@@ -16,9 +16,26 @@ namespace DirtyRomManager
 {
     class IGDBCommunicator : IGDBCommInterface
     {
-        //k is temporary and should be removed
         private string userKey = "";
         private string bURL = "https://api-v3.igdb.com/games";
+        string directory = Directory.GetCurrentDirectory();
+
+        private void checkKeyFile()
+        {
+            if (string.IsNullOrEmpty(userKey))
+            {
+                try
+                {
+                    userKey = System.IO.File.ReadAllText(directory + "\\my_key.txt");
+                    Console.WriteLine(userKey);
+                }
+                catch (FileNotFoundException e)
+                {
+                    Console.WriteLine("error: " + e);
+                }
+            }
+        }
+            
 
         public void IgdbCommunicator()
         {
@@ -43,29 +60,24 @@ namespace DirtyRomManager
 
         public List<string> getGame(string name)
         {
+            checkKeyFile();
+
+            //IGDB API Call
             List<string> games = new List<string>();
             var client = new RestClient(bURL);
-            var request = new RestRequest(Method.GET);
-            request.AddHeader("cache-control", "no-cache");
-            request.AddHeader("Connection", "keep-alive");
-            request.AddHeader("content-length", "38");
-            request.AddHeader("accept-encoding", "gzip, deflate");
-            //request.AddHeader("cookie", "__cfduid=d2ea416a09cd63ed63510ce10beff96e91557864505");
-            request.AddHeader("Host", "api-v3.igdb.com");
-            //request.AddHeader("Postman-Token", "b3aae80a-3783-497b-bab7-d75e3238cf5d,379b8ee0-c400-4ac9-bf75-5c66a94703df");
-            request.AddHeader("Cache-Control", "no-cache");
-            request.AddHeader("Accept", "*/*");
-            request.AddHeader("User-Agent", "PostmanRuntime/7.11.0");
-            request.AddHeader("Content-Type", "text/plain");
+            var request = new RestRequest(Method.POST);
+            request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
             request.AddHeader("user-key", userKey);
             //request.AddParameter("undefined", "fields name;\nsearch " + "\""+ name +"\";\nlimit 20;", ParameterType.RequestBody);
             request.AddParameter("undefined", "fields name;\nsearch \"Sonic\";\nlimit 20;", ParameterType.RequestBody);
-            IRestResponse response = client.Execute(request);
-            GameResponse temp = JsonConvert.DeserializeObject<GameResponse>(response.Content);
-            for (int i = 0; i < temp.games.Count; i++)
+
+            GameResponse response = client.Execute<GameResponse>(request).Data;
+            for (int i = 0; i < 10; i++)
             {
-                Console.WriteLine(temp.games[i].name);
+                //games.Add(response.games[i].name);
+                Console.WriteLine(response.games[i].name);
             }
+            
             return games;
         }
 
