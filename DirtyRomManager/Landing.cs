@@ -26,13 +26,17 @@ namespace DirtyRomManager
 
         private void button2_Click(object sender, EventArgs e)
         {
-            
-            List<string> ls = iC.getGame("Sonic");
-            debugOutput("Search Term: Sonic" );
-            for (int i = 0; i < ls.Count; i++)
+            if (!String.IsNullOrEmpty(textBox1.Text))
             {
-                debugOutput(ls[i]);
+                List<string> ls = iC.searchGame(textBox1.Text);
+                debugOutput("Search Term: " + textBox1.Text);
+                for (int i = 0; i < ls.Count; i++)
+                {
+                    debugOutput(ls[i]);
+                }
             }
+            
+            
             
         }
 
@@ -52,6 +56,11 @@ namespace DirtyRomManager
         }
 
         private void txtResponse_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
         {
 
         }

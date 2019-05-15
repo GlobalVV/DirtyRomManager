@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -17,8 +18,9 @@ namespace DirtyRomManager
     class IGDBCommunicator : IGDBCommInterface
     {
         private string userKey = "";
-        private string bURL = "https://api-v3.igdb.com/games";
+        private string bURL = "https://api-v3.igdb.com/";
         string directory = Directory.GetCurrentDirectory();
+        private static readonly HttpClient client = new HttpClient();
 
         private void checkKeyFile()
         {
@@ -35,7 +37,6 @@ namespace DirtyRomManager
                 }
             }
         }
-            
 
         public void IgdbCommunicator()
         {
@@ -58,38 +59,38 @@ namespace DirtyRomManager
             return "";
         }
 
-        public List<string> getGame(string name)
+        public List<string> searchGame(string name)
         {
             checkKeyFile();
 
             //IGDB API Call
             List<string> games = new List<string>();
-            var client = new RestClient(bURL);
-            var request = new RestRequest(Method.POST);
-            request.OnBeforeDeserialization = resp => { resp.ContentType = "application/json"; };
-            request.AddHeader("user-key", userKey);
-            //request.AddParameter("undefined", "fields name;\nsearch " + "\""+ name +"\";\nlimit 20;", ParameterType.RequestBody);
-            request.AddParameter("undefined", "fields name;\nsearch \"Sonic\";\nlimit 20;", ParameterType.RequestBody);
 
-            GameResponse response = client.Execute<GameResponse>(request).Data;
-            for (int i = 0; i < 10; i++)
+            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(bURL + "games?search="+name+"&fields=name,id");
+            //HttpRequestMessage reqMsg = new HttpRequestMessage();
+            request.Accept = "application/json";
+            request.Headers.Set("user-key", userKey);
+            WebResponse response = request.GetResponse();
+            StreamReader sr = new StreamReader(response.GetResponseStream());
+            string responseString = sr.ReadToEnd();
+            sr.Close();
+
+            using (StringReader reader = new StringReader(responseString))
             {
-                //games.Add(response.games[i].name);
-                Console.WriteLine(response.games[i].name);
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.Contains("\"name\": \""))
+                    {
+                        string temp = line.Replace("\"name\": \"", "");
+                        temp = temp.Replace("\\u0026", "&");
+                        temp = temp.Replace("\\u0027", "'");
+                        temp = temp.Remove(0, 4);
+                        games.Add(temp.Replace("\"", ""));
+                    }
+                }
             }
-            
             return games;
-        }
-
-        public class Game
-        {
-            public string id { get; set; }
-            public string name { get; set; }
-        }
-
-        public class GameResponse
-        {
-            public List<Game> games { get; set; }
         }
     }
 }

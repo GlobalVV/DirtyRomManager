@@ -11,6 +11,6 @@ namespace DirtyRomManager
         void IgdbCommunicator();
         void setKey(string k);
         string getKey();
-        List<string> getGame(string name);
+        List<string> searchGame(string name);
     }
 }
