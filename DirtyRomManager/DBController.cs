@@ -18,7 +18,7 @@ namespace DirtyRomManager
             {
                 try
                 {
-                    SqlCeEngine engine = new SqlCeEngine(connStr);
+                    
                 }
             }
         }
